@@ -3,9 +3,9 @@
 // 2. Добавьте на экран виджет Scriptable, выберите этот скрипт,
 //    а в поле Parameter вставьте код из трекера (Цели → Виджет на iPhone).
 
-const SUPABASE_URL = "";   // "https://abcdxyz.supabase.co"
-const SUPABASE_KEY = "";   // publishable key "sb_publishable_…"
-const TRACKER_URL  = "";   // адрес трекера, например "https://username.github.io/tracker/"
+const SUPABASE_URL = "https://arqsknaepqxipwdfvoqj.supabase.co";   // "https://abcdxyz.supabase.co"
+const SUPABASE_KEY = "sb_publishable_fWsozu9xJaNihvDmgjfZTA_9fLsM5k-";   // publishable key "sb_publishable_…"
+const TRACKER_URL  = "https://altusha4.github.io/tracker/";   // адрес трекера, например "https://username.github.io/tracker/"
 
 // ---------------------------------------------------------------------------
 const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
