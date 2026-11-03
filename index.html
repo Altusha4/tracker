@@ -16,7 +16,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: phone-first single column (max 640px), app-style bottom tab bar, one floating "+" for new tasks */
+/* Layout: phone — one column, bottom tab bar, floating "+";
+   laptop (≥960px) — fixed left sidebar with sections and "New task", content in two columns */
 :root{
   --bg:#F2F3F7; --surface:#FFFFFF; --surface-2:#E8EAF1; --ink:#151933; --muted:#5B6180; --line:#DADDE8;
   --accent:#3246D3; --accent-soft:#E3E7FF; --on-accent:#FFFFFF;
@@ -199,6 +200,49 @@ details[open] summary{margin-bottom:12px}
 .empty{text-align:center;padding:18px 8px;color:var(--muted);display:grid;gap:8px;justify-items:center}
 .auth{max-width:420px;margin:8vh auto 0;width:100%}
 .code{font-family:var(--f-mono);font-size:13px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+
+/* columns: stacked on phone, side by side on laptop */
+.layout{display:grid;gap:18px;align-items:start}
+.col{display:grid;gap:18px;min-width:0}
+.side-filters{display:none}
+.nav-brand,.nav-new,.nav-foot{display:none}
+kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--muted)}
+
+@media (min-width:960px){
+  body.has-nav{padding-left:240px}
+  .wrap{max-width:1160px;padding-block:36px 56px;padding-left:max(36px,env(safe-area-inset-left,0px));padding-right:max(36px,env(safe-area-inset-right,0px));gap:24px}
+  h1.display{font-size:34px}
+  .layout{gap:24px}
+  .col{gap:24px}
+  .layout-today{grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr)}
+  .layout-today .tiles{grid-template-columns:1fr}
+  .layout-tasks{grid-template-columns:220px minmax(0,1fr)}
+  .layout-goals{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chips{display:none}
+  .side-filters{display:grid;gap:4px;position:sticky;top:36px}
+  .side-filters .chip{border:0;background:transparent;border-radius:10px;padding:8px 12px;justify-content:space-between;gap:8px;font-size:14px}
+  .side-filters .chip:hover{background:var(--surface)}
+  .side-filters .chip[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .side-filters .count{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+  .area-form{max-width:560px}
+  .card{padding:20px}
+  .task{padding:12px 0}
+
+  .nav{top:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);
+    padding:28px 16px max(20px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex}
+  .nav-inner{display:flex;flex-direction:column;gap:4px;width:100%;max-width:none;margin:0}
+  .nav-brand{display:flex;align-items:center;gap:10px;padding:0 10px 22px;font-family:var(--f-display);font-weight:700;font-size:15px;line-height:1.15}
+  .nav-brand img{width:34px;height:34px;border-radius:10px}
+  .nav-new{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px;width:100%}
+  .tab{grid-template-columns:22px 1fr;justify-items:start;align-items:center;gap:12px;padding:10px 12px;font-size:14.5px}
+  .tab:hover{background:var(--bg)}
+  .tab[aria-current="page"]{background:var(--accent-soft)}
+  .nav-foot{display:block;margin-top:auto;padding:0 10px;font-size:12px;color:var(--muted)}
+  .fab{display:none}
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-50%);width:min(540px,calc(100% - 48px));border-radius:20px;padding:24px}
+  .toast{bottom:32px;left:calc(50% + 120px)}
+}
+@media (hover:hover){.task .del{opacity:.35}.task:hover .del,.task .del:focus-visible,.task .del.armed{opacity:1}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
@@ -212,10 +256,13 @@ details[open] summary{margin-bottom:12px}
 
 <nav class="nav" aria-label="Разделы">
   <div class="nav-inner">
+    <div class="nav-brand"><img src="icon-180.png" alt="">Личный трекер<br>целей</div>
+    <button class="btn primary nav-new" data-action="open-sheet">+ Новая задача <kbd style="color:inherit;border-color:currentColor;opacity:.7">N</kbd></button>
     <button class="tab" data-action="tab" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>Сегодня</button>
     <button class="tab" data-action="tab" data-tab="tasks"><svg viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01" stroke-width="2.6"/></svg>Задачи</button>
     <button class="tab" data-action="tab" data-tab="areas"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>Сферы</button>
     <button class="tab" data-action="tab" data-tab="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>Цели</button>
+    <div class="nav-foot" id="nav-foot"></div>
   </div>
 </nav>
 
@@ -349,11 +396,15 @@ function viewToday(){
     <div class="ring-wrap">${ring(p)}<span class="ring-label">${Math.round(p*100)}%</span></div>
   </section>
 
+  <div class="layout layout-today"><div class="col">
   <section class="card">
     <div class="card-head"><h2>Сегодня</h2><button class="btn small" data-action="open-sheet">+ Задача</button></div>
     ${total?`<ul class="tasks">${items.map(taskRow).join('')}</ul>`
       :`<div class="empty"><span>Добавьте задачу на сегодня или ежедневную привычку.</span><button class="btn primary small" data-action="open-sheet">Добавить задачу</button></div>`}
   </section>
+
+  ${soon.length?`<section class="card"><h2>На этой неделе</h2><ul class="tasks">${soon.map(t=>taskRow({t,checked:false})).join('')}</ul></section>`:''}
+  </div><div class="col">
 
   <section class="tiles">
     <button class="tile" data-action="tab" data-tab="goals">
@@ -373,12 +424,11 @@ function viewToday(){
     </button>
   </section>
 
-  ${soon.length?`<section class="card"><h2>На этой неделе</h2><ul class="tasks">${soon.map(t=>taskRow({t,checked:false})).join('')}</ul></section>`:''}
-
   <section class="card">
     <div class="card-head"><h2>Неделя</h2><span class="hint">выполнено задач по дням</span></div>
     <div class="week">${days7.map((dd,i)=>`<div class="bar-col"><span class="num">${counts[i]||''}</span><div class="bar-track"><div class="bar${dd===td?' today':''}" style="height:${Math.max(4,counts[i]/max*70)}px"></div></div><span>${WD[parse(dd).getDay()]}</span></div>`).join('')}</div>
-  </section>`;
+  </section>
+  </div></div>`;
 }
 
 function viewTasks(){
@@ -396,13 +446,18 @@ function viewTasks(){
   ];
   const chip=(id,label,color)=>`<button class="chip" data-action="filter" data-id="${esc(id)}" aria-pressed="${f===id}">${color?`<i class="dot" style="--c:var(--${esc(color)})"></i>`:''}${esc(label)}</button>`;
   const any=groups.some(g=>g[1].length);
+  const openIn=id=>S.tasks.filter(t=>!isDaily(t)&&!t.done&&(id==='all'||(t.areaId||'')===(id==='none'?'':id))).length;
+  const side=(id,label,color)=>`<button class="chip" data-action="filter" data-id="${esc(id)}" aria-pressed="${f===id}"><span>${color?`<i class="dot" style="--c:var(--${esc(color)})"></i>`:''}${esc(label)}</span><span class="count">${openIn(id)||''}</span></button>`;
   return `
   <section class="hero"><div class="hero-text"><p class="eyebrow">Все задачи</p><h1 class="display">${open.length} ${plural(open.length,TASK)} в работе</h1></div></section>
   <div class="chips" role="group" aria-label="Фильтр по сфере">${chip('all','Все')}${S.areas.map(a=>chip(a.id,a.name,a.color||'c1')).join('')}${chip('none','Без сферы')}</div>
+  <div class="layout layout-tasks">
+  <nav class="side-filters" aria-label="Фильтр по сфере"><p class="group-title" style="margin:0 12px 6px">Сферы</p>${side('all','Все')}${S.areas.map(a=>side(a.id,a.name,a.color||'c1')).join('')}${side('none','Без сферы')}</nav>
   <section class="card">
     ${any?groups.filter(g=>g[1].length).map(([title,list,late])=>`<p class="group-title">${title} · ${list.length}</p><ul class="tasks">${list.map(t=>taskRow({t,checked:isDaily(t)?!!h[t.id]:!!t.done,overdue:!!late})).join('')}</ul>`).join('')
       :`<div class="empty"><span>Здесь пока пусто.</span><button class="btn primary small" data-action="open-sheet">Добавить задачу</button></div>`}
-  </section>`;
+  </section>
+  </div>`;
 }
 
 function viewAreas(){
@@ -417,7 +472,7 @@ function viewAreas(){
   return `
   <section class="hero"><div class="hero-text"><p class="eyebrow">Сферы жизни</p><h1 class="display">Прогресс по сферам</h1><p class="hint">Процент считается по разовым задачам и пройденным темам экзаменов. Нажмите на сферу, чтобы увидеть её задачи.</p></div></section>
   ${S.areas.length?`<section class="areas">${cards}</section>`:`<div class="card empty"><span>Сфер пока нет. Добавьте первую: например, «Универ» или «Спорт».</span></div>`}
-  <form class="card form" data-form="area">
+  <form class="card form area-form" data-form="area">
     <h2>Новая сфера</h2>
     <label class="f">Название<input id="a-name" required maxlength="40" placeholder="Например, Чтение"></label>
     <div class="swatches" role="group" aria-label="Цвет">${COLORS.map(c=>`<button type="button" class="sw" style="--c:var(--${c})" data-action="color" data-id="${c}" aria-pressed="${S.color===c}" aria-label="Цвет ${c.slice(1)}"></button>`).join('')}</div>
@@ -442,6 +497,7 @@ function viewGoals(){
   return `
   <section class="hero"><div class="hero-text"><p class="eyebrow">Цели</p><h1 class="display">Питание, IELTS, экзамены</h1></div></section>
 
+  <div class="layout layout-goals"><div class="col">
   <section class="card">
     <div class="card-head"><h2>Дефицит калорий</h2><span class="hint">расход ${fmtK(tdee)} · цель −${fmtK(goal)} ккал</span></div>
     <div>
@@ -464,6 +520,7 @@ function viewGoals(){
     </form>
     ${weights.length?`<div>${spark(weights.map(x=>+x.weight))}<div class="split"><span>${fmtDate(weights[0].date)}: <b class="num">${(+weights[0].weight).toFixed(1)}</b></span><span>сейчас: <b class="num">${(+weights[weights.length-1].weight).toFixed(1)}</b> кг</span></div></div>`:''}
   </section>
+  </div><div class="col">
 
   <section class="card">
     <div class="card-head"><h2>IELTS</h2><span class="hint">цель ${target.toFixed(1)}${iDate?` · экзамен ${fmtDate(iDate)}${iDate>=td?`, через ${between(td,iDate)} ${plural(between(td,iDate),DAY)}`:''}`:''}</span></div>
@@ -535,7 +592,8 @@ function viewGoals(){
   <div class="row" style="justify-content:space-between;align-items:center">
     <span class="hint">${esc(S.email||'')}</span>
     <button type="button" class="btn small" data-action="logout">Выйти</button>
-  </div>`;
+  </div>
+  </div></div>`;
 }
 
 function viewAuth(){
@@ -570,7 +628,10 @@ function render(){
   if(focusId) document.getElementById(focusId)?.focus();
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
   $('#fab').hidden=S.status!=='ready'||!S.got.has('tasks');
-  document.querySelector('.nav').hidden=S.status==='auth'||S.status==='nodb';
+  const navOn=!(S.status==='auth'||S.status==='nodb');
+  document.querySelector('.nav').hidden=!navOn;
+  document.body.classList.toggle('has-nav',navOn);
+  $('#nav-foot').textContent=S.email||'';
 }
 let renderQueued=false;
 function scheduleRender(){if(renderQueued) return; renderQueued=true; queueMicrotask(()=>{renderQueued=false; render()})}
@@ -619,6 +680,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!$('#sheet').hidden) closeSheet();
+  if((e.key==='n'||e.key==='т')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&S.status==='ready'&&$('#sheet').hidden&&!e.target.closest('input,select,textarea')){e.preventDefault();openSheet()}
   if((e.key==='Enter'||e.key===' ')&&e.target.matches('.area[data-action]')){e.preventDefault();e.target.click()}
 });
 document.addEventListener('change',e=>{
