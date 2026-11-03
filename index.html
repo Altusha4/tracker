@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Личный трекер целей</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Трекер">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F3F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1120" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone-first single column (max 640px), app-style bottom tab bar, one floating "+" for new tasks */
+:root{
+  --bg:#F2F3F7; --surface:#FFFFFF; --surface-2:#E8EAF1; --ink:#151933; --muted:#5B6180; --line:#DADDE8;
+  --accent:#3246D3; --accent-soft:#E3E7FF; --on-accent:#FFFFFF;
+  --good:#1D8656; --warn:#A8650F; --bad:#C03636;
+  --c1:#3B62E0; --c2:#8B4CD8; --c3:#1F9A63; --c4:#D9691A; --c5:#D3468A; --c6:#168C99; --c7:#A88B08; --c8:#CE4242;
+  --f-display:"Unbounded","Onest",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1120; --surface:#171B2D; --surface-2:#21263B; --ink:#E9EBF5; --muted:#979DBA; --line:#2B3150;
+  --accent:#8291FF; --accent-soft:#252C55; --on-accent:#0E1120;
+  --good:#4CC28A; --warn:#E3A64B; --bad:#F07575;
+  --c1:#6F8FFF; --c2:#B184F5; --c3:#4CC890; --c4:#F59A52; --c5:#F27DB5; --c6:#45C2CF; --c7:#E2C64A; --c8:#F27474;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1120; --surface:#171B2D; --surface-2:#21263B; --ink:#E9EBF5; --muted:#979DBA; --line:#2B3150;
+  --accent:#8291FF; --accent-soft:#252C55; --on-accent:#0E1120;
+  --good:#4CC28A; --warn:#E3A64B; --bad:#F07575;
+  --c1:#6F8FFF; --c2:#B184F5; --c3:#4CC890; --c4:#F59A52; --c5:#F27DB5; --c6:#45C2CF; --c7:#E2C64A; --c8:#F27474;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-size:14px}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 140px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1,h2,h3{margin:0;text-wrap:balance}
+.display{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em}
+h1.display{font-size:28px;line-height:1.1}
+h2{font-family:var(--f-display);font-weight:500;font-size:16px}
+.eyebrow{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px;min-width:0}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.banner{border-radius:var(--r);padding:12px 14px;background:var(--accent-soft);font-size:14px}
+.banner.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+
+/* hero */
+.hero{display:flex;align-items:center;gap:18px;justify-content:space-between}
+.hero-text{display:grid;gap:6px;min-width:0}
+.ring{width:92px;height:92px;flex:none}
+.ring circle{fill:none;stroke-width:8}
+.ring-bg{stroke:var(--surface-2)}
+.ring-fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.ring-wrap{position:relative;flex:none}
+.ring-label{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:20px}
+
+/* tasks */
+.tasks{list-style:none;margin:0;padding:0;display:grid}
+.task{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.task:first-child{border-top:0}
+.check{flex:none;width:28px;height:28px;border-radius:9px;border:2px solid var(--line);background:transparent;display:grid;place-items:center;cursor:pointer;padding:0}
+.check svg{width:16px;height:16px;fill:none;stroke:var(--on-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.check:hover{border-color:var(--accent)}
+.is-done .check{background:var(--accent);border-color:var(--accent)}
+.is-done .check svg{opacity:1}
+.is-done .task-title{color:var(--muted);text-decoration:line-through}
+.task-body{display:grid;gap:2px;min-width:0;flex:1}
+.task-title{overflow-wrap:anywhere}
+.task-meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px;color:var(--muted);align-items:center}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:5px;vertical-align:1px}
+.tag{font-size:11.5px;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.late{color:var(--bad);font-weight:600}
+.prio{color:var(--bad);margin-right:4px}
+.del{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:8px;font-size:18px;line-height:1}
+.del:hover{background:var(--surface-2)}
+.del.armed{font-size:12.5px;color:var(--on-accent);background:var(--bad);font-weight:600}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:4px;text-align:left;cursor:pointer;min-width:0}
+.tile:hover{border-color:var(--accent)}
+.tile-val{font-family:var(--f-display);font-weight:700;font-size:20px}
+.tile-sub{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+
+/* week bars */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:110px}
+.bar-col{display:grid;grid-template-rows:1fr auto auto;gap:4px;height:100%;text-align:center;font-size:11.5px;color:var(--muted)}
+.bar-track{display:flex;align-items:flex-end;justify-content:center}
+.bar{width:100%;max-width:30px;border-radius:6px 6px 3px 3px;background:var(--accent-soft);min-height:4px}
+.bar.today{background:var(--accent)}
+
+/* progress */
+.prog{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.prog>span{display:block;height:100%;border-radius:99px;background:var(--c,var(--accent))}
+.prog.over>span{background:var(--bad)}
+
+/* areas */
+.areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.area{border-left:0;position:relative;cursor:pointer;text-align:left}
+.area-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.area-name{font-weight:600;display:flex;align-items:center;gap:8px;min-width:0;overflow-wrap:anywhere}
+.area-pct{font-family:var(--f-display);font-weight:700;font-size:18px;color:var(--c)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:3px solid transparent;background:var(--c);cursor:pointer;padding:0;outline-offset:2px}
+.sw[aria-pressed="true"]{border-color:var(--surface);box-shadow:0 0 0 2px var(--c)}
+
+/* chips */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;cursor:pointer;display:flex;align-items:center}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.group-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:4px 0 -4px}
+
+/* forms */
+.form{display:grid;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.row>*{flex:1 1 120px;min-width:0}
+label.f{display:grid;gap:4px;font-size:12.5px;color:var(--muted);font-weight:500}
+input,select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:42px;color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:10px;padding:10px 16px;min-height:42px;font-weight:600;cursor:pointer;background:var(--surface-2);color:var(--ink);flex:0 0 auto}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.small{min-height:34px;padding:6px 12px;font-size:13.5px}
+.btn:hover{filter:brightness(1.05)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:18px;line-height:1}
+
+/* nutrition / ielts */
+.big{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.05}
+.split{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.entries{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:14px}
+.entries li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-top:1px dashed var(--line)}
+.entries li:first-child{border-top:0}
+.skills{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.skill{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center;display:grid;gap:2px}
+.skill b{font-family:var(--f-display);font-size:20px}
+.skill small{font-size:11.5px;color:var(--muted)}
+.skill.ok b{color:var(--good)} .skill.low b{color:var(--warn)}
+.spark{width:100%;height:60px;display:block}
+.spark path.line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.spark path.area{fill:var(--accent-soft);stroke:none}
+.spark circle{fill:var(--accent)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:6px 6px;text-align:center;border-top:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;border-top:0;font-size:12px}
+td:first-child,th:first-child{text-align:left}
+details summary{cursor:pointer;font-family:var(--f-display);font-weight:500;font-size:16px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details[open] summary{margin-bottom:12px}
+
+/* exams */
+.exam{display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.exam:first-child{border-top:0;padding-top:0}
+.exam-top{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.countdown{font-family:var(--f-display);font-weight:700;font-size:18px;white-space:nowrap}
+.countdown.soon{color:var(--bad)}
+
+/* nav, fab, sheet */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.nav-inner{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tab{border:0;background:transparent;display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11.5px;color:var(--muted);cursor:pointer;border-radius:10px;font-weight:500}
+.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent)}
+.fab{position:fixed;z-index:21;right:max(16px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));
+  width:56px;height:56px;border-radius:18px;border:0;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;cursor:pointer;
+  box-shadow:0 8px 24px color-mix(in srgb,var(--accent) 35%,transparent)}
+@media (min-width:720px){.fab{right:calc(50% - 320px + 16px)}}
+.scrim{position:fixed;inset:0;z-index:30;background:color-mix(in srgb,var(--ink) 40%,transparent)}
+.sheet{position:fixed;z-index:31;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:grid;gap:12px;max-height:92vh;overflow:auto;border:1px solid var(--line)}
+.prio-pick{display:flex;gap:6px}
+.prio-pick label{flex:1;display:flex}
+.prio-pick input{position:absolute;opacity:0;width:1px;height:1px}
+.prio-pick span{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 6px;cursor:pointer;font-size:13.5px}
+.prio-pick input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prio-pick input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.toast{position:fixed;z-index:40;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);
+  padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px)}
+.empty{text-align:center;padding:18px 8px;color:var(--muted);display:grid;gap:8px;justify-items:center}
+.auth{max-width:420px;margin:8vh auto 0;width:100%}
+.code{font-family:var(--f-mono);font-size:13px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+</head>
+<body>
+
+<main class="wrap" id="view" aria-live="polite"></main>
+
+<button class="fab" id="fab" data-action="open-sheet" aria-label="Новая задача" hidden>+</button>
+
+<nav class="nav" aria-label="Разделы">
+  <div class="nav-inner">
+    <button class="tab" data-action="tab" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>Сегодня</button>
+    <button class="tab" data-action="tab" data-tab="tasks"><svg viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01" stroke-width="2.6"/></svg>Задачи</button>
+    <button class="tab" data-action="tab" data-tab="areas"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>Сферы</button>
+    <button class="tab" data-action="tab" data-tab="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>Цели</button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim" data-action="close-sheet" hidden></div>
+<form class="sheet" id="sheet" data-form="task" hidden>
+  <h2>Новая задача</h2>
+  <label class="f">Что сделать<input id="t-title" required maxlength="140" placeholder="Например, решить 2 теста Listening" autocomplete="off"></label>
+  <label class="f">Сфера<select id="t-area"></select></label>
+  <div class="row">
+    <label class="f">Срок<input type="date" id="t-due"></label>
+    <label class="f">Повтор<select id="t-repeat"><option value="none">Один раз</option><option value="daily">Каждый день</option></select></label>
+  </div>
+  <div class="f" style="display:grid;gap:4px;font-size:12.5px;color:var(--muted);font-weight:500">Важность
+    <div class="prio-pick" role="radiogroup">
+      <label><input type="radio" name="t-prio" id="t-prio-1" value="1"><span>Срочно</span></label>
+      <label><input type="radio" name="t-prio" id="t-prio-2" value="2" checked><span>Обычно</span></label>
+      <label><input type="radio" name="t-prio" id="t-prio-3" value="3"><span>Когда-нибудь</span></label>
+    </div>
+  </div>
+  <div class="row" style="justify-content:flex-end">
+    <button type="button" class="btn" data-action="close-sheet" style="flex:0 0 auto">Отмена</button>
+    <button type="submit" class="btn primary" style="flex:0 0 auto">Добавить</button>
+  </div>
+</form>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD_FULL=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const WD=['вс','пн','вт','ср','чт','пт','сб'];
+const COLORS=['c1','c2','c3','c4','c5','c6','c7','c8'];
+const DAY=['день','дня','дней'], TASK=['задача','задачи','задач'];
+const TABS=['today','tasks','areas','goals'];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>ymd(new Date());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const between=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const fmtDate=s=>{const d=parse(s);return d.getDate()+' '+MONTHS[d.getMonth()]};
+const fmtK=n=>Math.round(n).toLocaleString('ru-RU');
+function plural(n,f){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return f[2];if(n1>1&&n1<5)return f[1];if(n1===1)return f[0];return f[2]}
+function relDue(s){const n=between(today(),s);
+  if(n===0)return 'сегодня'; if(n===1)return 'завтра'; if(n===-1)return 'вчера';
+  if(n<0)return `просрочено на ${-n} ${plural(-n,DAY)}`; if(n<7)return `через ${n} ${plural(n,DAY)}`; return fmtDate(s)}
+const band=m=>Math.round((+m.L + +m.R + +m.W + +m.S)/4*2)/2;
+
+let db=null, armTimer=null, toastTimer=null;
+const S={areas:[],tasks:[],exams:[],ielts:[],days:{},settings:{},got:new Set(),fresh:new Set(),
+  status:'loading',stale:false,authMode:'in',authMsg:'',widgetToken:'',tab:'today',filter:'all',armed:null,color:'c1'};
+const NEED=['areas','tasks','exams','ielts','days','settings'];
+{const h=location.hash.slice(1); if(TABS.includes(h)) S.tab=h;}
+
+/* ---------- helpers over state ---------- */
+const setting=(k,def)=>{const v=S.settings[k];return v===undefined||v===''||v===null?def:v};
+const areaOf=id=>S.areas.find(a=>a.id===id);
+const isDaily=t=>t.repeat==='daily';
+function dayTotals(d){const x=S.days[d]||{};const sum=a=>(a||[]).reduce((s,e)=>s+(+e.kcal||0),0);
+  return {inK:sum(x.food),out:sum(x.burn),logged:(x.food||[]).length>0}}
+function deficitOn(d){const t=dayTotals(d);return t.logged?(+setting('tdee',2000))+t.out-t.inK:null}
+function doneOn(d){const h=Object.keys(S.days[d]?.habits||{}).length;
+  return h+S.tasks.filter(t=>!isDaily(t)&&t.done&&t.doneAt===d).length}
+function todayItems(){const td=today(),habits=S.days[td]?.habits||{};
+  const items=[];
+  for(const t of S.tasks){
+    if(isDaily(t)) items.push({t,checked:!!habits[t.id]});
+    else if(t.due&&t.due<=td&&(!t.done||t.doneAt===td)) items.push({t,checked:!!t.done,overdue:!t.done&&t.due<td});
+  }
+  return items.sort((a,b)=>(a.checked-b.checked)||((a.t.priority||2)-(b.t.priority||2))||String(a.t.due||'').localeCompare(String(b.t.due||'')));
+}
+function areaStats(id){
+  const ts=S.tasks.filter(t=>(t.areaId||'')===id&&!isDaily(t));
+  const ex=S.exams.filter(e=>(e.areaId||'')===id);
+  const done=ts.filter(t=>t.done).length, topD=ex.reduce((s,e)=>s+(+e.topicsDone||0),0), topT=ex.reduce((s,e)=>s+(+e.topicsTotal||0),0);
+  const daily=S.tasks.filter(t=>(t.areaId||'')===id&&isDaily(t)); const h=S.days[today()]?.habits||{};
+  const denom=ts.length+topT; const pct=denom?Math.round((done+topD)/denom*100):null;
+  const next=ts.filter(t=>!t.done&&t.due).sort((a,b)=>a.due.localeCompare(b.due))[0];
+  return {ts,done,topD,topT,pct,daily,dailyDone:daily.filter(t=>h[t.id]).length,next};
+}
+
+/* ---------- writes ---------- */
+const Q={};
+function errMsg(e){return e?.code==='quota_exceeded'?'Хранилище заполнено: удалите старые записи.'
+  :e?.code==='invalid_argument'?'Нет прав на изменение этого трекера.':'Не получилось сохранить. Попробуйте ещё раз.'}
+function queue(key,fn){if(!db){toast('Хранилище недоступно в этом просмотре.');return Promise.resolve()}
+  const p=(Q[key]||Promise.resolve()).then(fn);Q[key]=p.catch(()=>{});return p.catch(e=>toast(errMsg(e)))}
+function updDay(d,mut){return queue('days/'+d,async()=>{const cur=S.days[d]?structuredClone(S.days[d]):{};
+  mut(cur);cur.date=d;await db.doc('days/'+d).set(cur)})}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,3200)}
+function arm(key){if(S.armed===key){S.armed=null;return true}
+  S.armed=key;clearTimeout(armTimer);armTimer=setTimeout(()=>{S.armed=null;render()},3000);return false}
+
+/* ---------- small renderers ---------- */
+function ring(p){const r=38,c=2*Math.PI*r;
+  return `<svg viewBox="0 0 92 92" class="ring" aria-hidden="true"><circle cx="46" cy="46" r="${r}" class="ring-bg"/><circle cx="46" cy="46" r="${r}" class="ring-fg" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}" transform="rotate(-90 46 46)"/></svg>`}
+function spark(vals){if(vals.length<2)return '';const w=300,h=60,min=Math.min(...vals),max=Math.max(...vals),r=(max-min)||1;
+  const pts=vals.map((v,i)=>[6+i*(w-12)/(vals.length-1),8+(h-16)*(1-(v-min)/r)]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const last=pts[pts.length-1];
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path class="area" d="${line} L${last[0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z"/><path class="line" d="${line}"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.5"/></svg>`}
+function areaOptions(sel){return `<option value="">Без сферы</option>`+S.areas.map(a=>`<option value="${esc(a.id)}"${a.id===sel?' selected':''}>${esc(a.name)}</option>`).join('')}
+function taskRow({t,checked,overdue}){
+  const a=areaOf(t.areaId), armed=S.armed==='tasks:'+t.id;
+  const meta=[a?`<span><i class="dot" style="--c:var(--${esc(a.color||'c1')})"></i>${esc(a.name)}</span>`:'',
+    isDaily(t)?'<span class="tag">каждый день</span>':'',
+    !isDaily(t)&&t.due&&!(checked&&t.doneAt)?`<span class="${overdue?'late':''}">${relDue(t.due)}</span>`:''].join('');
+  return `<li class="task${checked?' is-done':''}">
+    <button class="check" data-action="toggle" data-id="${esc(t.id)}" aria-pressed="${checked}" aria-label="${checked?'Снять отметку':'Отметить'}: ${esc(t.title)}"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></button>
+    <div class="task-body"><span class="task-title">${t.priority==1?'<b class="prio" title="Срочно">!</b>':''}${esc(t.title)}</span>${meta?`<span class="task-meta">${meta}</span>`:''}</div>
+    <button class="del${armed?' armed':''}" data-action="del" data-kind="tasks" data-id="${esc(t.id)}" aria-label="Удалить задачу">${armed?'Удалить?':'×'}</button></li>`}
+
+/* ---------- views ---------- */
+function viewToday(){
+  const td=today(),d=parse(td),items=todayItems(),done=items.filter(i=>i.checked).length,total=items.length,p=total?done/total:0;
+  const def=deficitOn(td), goal=+setting('deficitGoal',500);
+  const ieltsDate=setting('ieltsDate',''), lastMock=[...S.ielts].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
+  const exam=S.exams.filter(e=>e.date>=td).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const soon=S.tasks.filter(t=>!isDaily(t)&&!t.done&&t.due&&t.due>td&&t.due<=addDays(td,7)).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+  const days7=[...Array(7)].map((_,i)=>addDays(td,i-6)), counts=days7.map(doneOn), max=Math.max(1,...counts);
+  let streak=0,cur=doneOn(td)?td:addDays(td,-1); while(doneOn(cur)>0&&streak<400){streak++;cur=addDays(cur,-1)}
+  return `
+  <section class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">${WD_FULL[d.getDay()]}</p>
+      <h1 class="display">${fmtDate(td)}</h1>
+      <p class="muted" style="margin:0">${total?`Сделано <b class="num">${done}</b> из <b class="num">${total}</b>`:'На сегодня задач нет'}${streak?` · серия <b class="num">${streak}</b> ${plural(streak,DAY)}`:''}</p>
+    </div>
+    <div class="ring-wrap">${ring(p)}<span class="ring-label">${Math.round(p*100)}%</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Сегодня</h2><button class="btn small" data-action="open-sheet">+ Задача</button></div>
+    ${total?`<ul class="tasks">${items.map(taskRow).join('')}</ul>`
+      :`<div class="empty"><span>Добавьте задачу на сегодня или ежедневную привычку.</span><button class="btn primary small" data-action="open-sheet">Добавить задачу</button></div>`}
+  </section>
+
+  <section class="tiles">
+    <button class="tile" data-action="tab" data-tab="goals">
+      <span class="eyebrow">Дефицит</span>
+      <span class="tile-val num">${def===null?'—':fmtK(def)+' ккал'}</span>
+      <span class="tile-sub">${def===null?'Еда сегодня не записана':def>=goal?'Цель на день выполнена':`Цель ${fmtK(goal)} ккал`}</span>
+    </button>
+    <button class="tile" data-action="tab" data-tab="goals">
+      <span class="eyebrow">IELTS</span>
+      <span class="tile-val">${ieltsDate&&ieltsDate>=td?`${between(td,ieltsDate)} ${plural(between(td,ieltsDate),DAY)}`:lastMock?band(lastMock).toFixed(1):'—'}</span>
+      <span class="tile-sub">${ieltsDate&&ieltsDate>=td?`до экзамена · ${fmtDate(ieltsDate)}`:'Укажите дату экзамена в «Целях»'}${lastMock?` · пробник ${band(lastMock).toFixed(1)} / ${(+setting('ieltsTarget',7)).toFixed(1)}`:''}</span>
+    </button>
+    <button class="tile" data-action="tab" data-tab="goals">
+      <span class="eyebrow">Ближайший экзамен</span>
+      <span class="tile-val">${exam?`${between(td,exam.date)} ${plural(between(td,exam.date),DAY)}`:'—'}</span>
+      <span class="tile-sub">${exam?`${esc(exam.title)} · темы ${+exam.topicsDone||0}/${+exam.topicsTotal||0}`:'Экзамены не добавлены'}</span>
+    </button>
+  </section>
+
+  ${soon.length?`<section class="card"><h2>На этой неделе</h2><ul class="tasks">${soon.map(t=>taskRow({t,checked:false})).join('')}</ul></section>`:''}
+
+  <section class="card">
+    <div class="card-head"><h2>Неделя</h2><span class="hint">выполнено задач по дням</span></div>
+    <div class="week">${days7.map((dd,i)=>`<div class="bar-col"><span class="num">${counts[i]||''}</span><div class="bar-track"><div class="bar${dd===td?' today':''}" style="height:${Math.max(4,counts[i]/max*70)}px"></div></div><span>${WD[parse(dd).getDay()]}</span></div>`).join('')}</div>
+  </section>`;
+}
+
+function viewTasks(){
+  const td=today(), f=S.filter;
+  const inF=t=>f==='all'||(t.areaId||'')===(f==='none'?'':f);
+  const ts=S.tasks.filter(inF), h=S.days[td]?.habits||{};
+  const open=ts.filter(t=>!isDaily(t)&&!t.done);
+  const groups=[
+    ['Просрочено',open.filter(t=>t.due&&t.due<td),true],
+    ['Сегодня',open.filter(t=>t.due===td)],
+    ['Дальше',open.filter(t=>t.due&&t.due>td).sort((a,b)=>a.due.localeCompare(b.due))],
+    ['Без срока',open.filter(t=>!t.due)],
+    ['Каждый день',ts.filter(isDaily)],
+    ['Выполнено',ts.filter(t=>!isDaily(t)&&t.done).sort((a,b)=>String(b.doneAt).localeCompare(String(a.doneAt))).slice(0,15)],
+  ];
+  const chip=(id,label,color)=>`<button class="chip" data-action="filter" data-id="${esc(id)}" aria-pressed="${f===id}">${color?`<i class="dot" style="--c:var(--${esc(color)})"></i>`:''}${esc(label)}</button>`;
+  const any=groups.some(g=>g[1].length);
+  return `
+  <section class="hero"><div class="hero-text"><p class="eyebrow">Все задачи</p><h1 class="display">${open.length} ${plural(open.length,TASK)} в работе</h1></div></section>
+  <div class="chips" role="group" aria-label="Фильтр по сфере">${chip('all','Все')}${S.areas.map(a=>chip(a.id,a.name,a.color||'c1')).join('')}${chip('none','Без сферы')}</div>
+  <section class="card">
+    ${any?groups.filter(g=>g[1].length).map(([title,list,late])=>`<p class="group-title">${title} · ${list.length}</p><ul class="tasks">${list.map(t=>taskRow({t,checked:isDaily(t)?!!h[t.id]:!!t.done,overdue:!!late})).join('')}</ul>`).join('')
+      :`<div class="empty"><span>Здесь пока пусто.</span><button class="btn primary small" data-action="open-sheet">Добавить задачу</button></div>`}
+  </section>`;
+}
+
+function viewAreas(){
+  const cards=S.areas.map(a=>{const s=areaStats(a.id),armed=S.armed==='areas:'+a.id;
+    return `<div class="card area" style="--c:var(--${esc(a.color||'c1')})" data-action="open-area" data-id="${esc(a.id)}" role="button" tabindex="0" aria-label="Открыть задачи: ${esc(a.name)}">
+      <div class="area-top"><span class="area-name"><i class="dot" style="width:12px;height:12px"></i>${esc(a.name)}</span><span class="area-pct">${s.pct===null?'—':s.pct+'%'}</span></div>
+      <div class="prog"><span style="width:${s.pct||0}%"></span></div>
+      <div class="split"><span>задачи <b class="num">${s.done}/${s.ts.length}</b>${s.topT?` · темы <b class="num">${s.topD}/${s.topT}</b>`:''}</span>${s.daily.length?`<span>сегодня привычки <b class="num">${s.dailyDone}/${s.daily.length}</b></span>`:''}</div>
+      <div class="split"><span>${s.next?`Дальше: ${esc(s.next.title)} · ${relDue(s.next.due)}`:'Открытых задач со сроком нет'}</span>
+      <button class="del${armed?' armed':''}" data-action="del" data-kind="areas" data-id="${esc(a.id)}" aria-label="Удалить сферу">${armed?'Удалить?':'×'}</button></div>
+    </div>`}).join('');
+  return `
+  <section class="hero"><div class="hero-text"><p class="eyebrow">Сферы жизни</p><h1 class="display">Прогресс по сферам</h1><p class="hint">Процент считается по разовым задачам и пройденным темам экзаменов. Нажмите на сферу, чтобы увидеть её задачи.</p></div></section>
+  ${S.areas.length?`<section class="areas">${cards}</section>`:`<div class="card empty"><span>Сфер пока нет. Добавьте первую: например, «Универ» или «Спорт».</span></div>`}
+  <form class="card form" data-form="area">
+    <h2>Новая сфера</h2>
+    <label class="f">Название<input id="a-name" required maxlength="40" placeholder="Например, Чтение"></label>
+    <div class="swatches" role="group" aria-label="Цвет">${COLORS.map(c=>`<button type="button" class="sw" style="--c:var(--${c})" data-action="color" data-id="${c}" aria-pressed="${S.color===c}" aria-label="Цвет ${c.slice(1)}"></button>`).join('')}</div>
+    <div class="row"><button class="btn primary" type="submit">Добавить сферу</button></div>
+  </form>`;
+}
+
+function viewGoals(){
+  const td=today(), tdee=+setting('tdee',2000), goal=+setting('deficitGoal',500);
+  const t=dayTotals(td), budget=tdee+t.out-goal, left=budget-t.inK, def=deficitOn(td), dayDoc=S.days[td]||{};
+  const last7=[...Array(7)].map((_,i)=>addDays(td,-i)).map(deficitOn).filter(v=>v!==null);
+  const sum7=last7.reduce((s,v)=>s+v,0);
+  const weights=Object.values(S.days).filter(x=>+x.weight>0).sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+  const entries=[...(dayDoc.food||[]).map((e,i)=>({...e,list:'food',i})),...(dayDoc.burn||[]).map((e,i)=>({...e,list:'burn',i}))];
+
+  const target=+setting('ieltsTarget',7), iDate=setting('ieltsDate','');
+  const mocks=[...S.ielts].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const lm=mocks[mocks.length-1];
+  const skills=[['L','Listening'],['R','Reading'],['W','Writing'],['S','Speaking']];
+
+  const exams=[...S.exams].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  return `
+  <section class="hero"><div class="hero-text"><p class="eyebrow">Цели</p><h1 class="display">Питание, IELTS, экзамены</h1></div></section>
+
+  <section class="card">
+    <div class="card-head"><h2>Дефицит калорий</h2><span class="hint">расход ${fmtK(tdee)} · цель −${fmtK(goal)} ккал</span></div>
+    <div>
+      <div class="big num">${t.logged?(left>=0?fmtK(left):'+'+fmtK(-left)):fmtK(budget)} <span style="font-size:15px;font-family:var(--f-body);font-weight:500" class="muted">ккал</span></div>
+      <p class="hint">${!t.logged?'можно съесть сегодня, чтобы выйти на цель':left>=0?`ещё можно съесть · дефицит сейчас ${fmtK(def)}`:`сверх плана · дефицит ${fmtK(def)} из ${fmtK(goal)}`}</p>
+    </div>
+    <div class="prog${t.inK>budget?' over':''}"><span style="width:${Math.min(100,budget>0?t.inK/budget*100:100)}%"></span></div>
+    <div class="split"><span>съедено <b class="num">${fmtK(t.inK)}</b></span><span>активность <b class="num">+${fmtK(t.out)}</b></span><span>лимит <b class="num">${fmtK(budget)}</b></span></div>
+    <form class="form" data-form="kcal">
+      <div class="row">
+        <label class="f">Ккал<input id="k-kcal" type="number" inputmode="numeric" min="1" max="5000" required placeholder="450"></label>
+        <label class="f" style="flex-grow:2">Что это<input id="k-label" maxlength="60" placeholder="Обед, бег 30 мин…"></label>
+      </div>
+      <div class="row"><button class="btn primary" type="submit" value="food">+ Еда</button><button class="btn" type="submit" value="burn">+ Активность</button></div>
+    </form>
+    ${entries.length?`<ul class="entries">${entries.map(e=>`<li><span>${e.list==='burn'?'<span class="tag">активность</span> ':''}${esc(e.label||(e.list==='food'?'Еда':'Активность'))}</span><span class="num">${e.list==='burn'?'+':''}${fmtK(e.kcal)} <button class="del" data-action="rm-entry" data-list="${e.list}" data-i="${e.i}" aria-label="Убрать запись">×</button></span></li>`).join('')}</ul>`:''}
+    <div class="split"><span>за 7 дней: дефицит <b class="num">${fmtK(sum7)}</b> ккал${last7.length?` (${last7.length} ${plural(last7.length,DAY)} с записями)`:''}</span><span>≈ <b class="num">${(Math.max(0,sum7)/7700).toFixed(2)}</b> кг</span></div>
+    <form class="form" data-form="weight">
+      <div class="row"><label class="f">Вес сегодня, кг<input id="w-weight" type="number" step="0.1" min="30" max="250" inputmode="decimal" placeholder="${dayDoc.weight||'60.0'}"></label><button class="btn" type="submit">Записать</button></div>
+    </form>
+    ${weights.length?`<div>${spark(weights.map(x=>+x.weight))}<div class="split"><span>${fmtDate(weights[0].date)}: <b class="num">${(+weights[0].weight).toFixed(1)}</b></span><span>сейчас: <b class="num">${(+weights[weights.length-1].weight).toFixed(1)}</b> кг</span></div></div>`:''}
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>IELTS</h2><span class="hint">цель ${target.toFixed(1)}${iDate?` · экзамен ${fmtDate(iDate)}${iDate>=td?`, через ${between(td,iDate)} ${plural(between(td,iDate),DAY)}`:''}`:''}</span></div>
+    ${lm?`<div class="skills">${skills.map(([k,n])=>`<div class="skill ${+lm[k]>=target?'ok':'low'}"><small>${n}</small><b>${(+lm[k]).toFixed(1)}</b></div>`).join('')}</div>
+      <div class="split"><span>последний пробник ${fmtDate(lm.date)}: overall <b class="num">${band(lm).toFixed(1)}</b></span><span>${band(lm)>=target?'цель достигнута':`до цели ${(target-band(lm)).toFixed(1)}`}</span></div>
+      ${spark(mocks.map(band))}`
+      :`<p class="hint">Запишите результат пробного теста, и здесь появятся баллы по навыкам и динамика.</p>`}
+    <form class="form" data-form="mock">
+      <div class="row">
+        <label class="f">Дата<input id="m-date" type="date" value="${td}" required></label>
+        ${skills.map(([k])=>`<label class="f" style="flex-basis:60px">${k}<input id="m-${k}" type="number" step="0.5" min="0" max="9" inputmode="decimal" required></label>`).join('')}
+      </div>
+      <div class="row"><button class="btn primary" type="submit">Добавить пробник</button></div>
+    </form>
+    ${mocks.length?`<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>L</th><th>R</th><th>W</th><th>S</th><th>Overall</th><th></th></tr></thead><tbody>
+      ${[...mocks].reverse().map(m=>{const armed=S.armed==='ielts:'+m.id;return `<tr><td>${fmtDate(m.date)}</td>${skills.map(([k])=>`<td class="num">${(+m[k]).toFixed(1)}</td>`).join('')}<td class="num"><b>${band(m).toFixed(1)}</b></td><td><button class="del${armed?' armed':''}" data-action="del" data-kind="ielts" data-id="${esc(m.id)}" aria-label="Удалить пробник">${armed?'Удалить?':'×'}</button></td></tr>`}).join('')}
+    </tbody></table></div>`:''}
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Подготовка к экзаменам</h2><span class="hint">отмечайте пройденные темы</span></div>
+    ${exams.length?`<div>${exams.map(e=>{const n=between(td,e.date),a=areaOf(e.areaId),tot=+e.topicsTotal||0,dn=+e.topicsDone||0,armed=S.armed==='exams:'+e.id;
+      return `<div class="exam" style="--c:var(--${esc(a?.color||'c1')})">
+        <div class="exam-top"><div style="min-width:0"><b>${esc(e.title)}</b><div class="task-meta">${a?`<span><i class="dot"></i>${esc(a.name)}</span>`:''}<span>${fmtDate(e.date)}</span></div></div>
+        <span class="countdown${n>=0&&n<=7?' soon':''}">${n>0?`${n} ${plural(n,DAY)}`:n===0?'сегодня':'прошёл'}</span></div>
+        <div class="prog"><span style="width:${tot?dn/tot*100:0}%"></span></div>
+        <div class="split" style="align-items:center"><span>темы <b class="num">${dn}/${tot}</b>${tot&&n>0&&dn<tot?` · нужно ~${Math.ceil((tot-dn)/n*10)/10} в день`:''}</span>
+          <span class="stepper"><button data-action="topic" data-id="${esc(e.id)}" data-d="-1" aria-label="Минус тема">−</button><button data-action="topic" data-id="${esc(e.id)}" data-d="1" aria-label="Плюс тема">+</button>
+          <button class="del${armed?' armed':''}" data-action="del" data-kind="exams" data-id="${esc(e.id)}" aria-label="Удалить экзамен">${armed?'Удалить?':'×'}</button></span></div>
+      </div>`}).join('')}</div>`:`<p class="hint">Добавьте экзамен с датой и числом тем: трекер посчитает, сколько тем в день нужно проходить.</p>`}
+    <form class="form" data-form="exam">
+      <label class="f">Экзамен<input id="x-title" required maxlength="80" placeholder="Например, Матанализ"></label>
+      <div class="row">
+        <label class="f">Дата<input id="x-date" type="date" required></label>
+        <label class="f">Тем всего<input id="x-total" type="number" min="0" max="500" inputmode="numeric" placeholder="20"></label>
+        <label class="f">Сфера<select id="x-area">${areaOptions(S.areas.find(a=>/экзам|универ/i.test(a.name))?.id)}</select></label>
+      </div>
+      <div class="row"><button class="btn primary" type="submit">Добавить экзамен</button></div>
+    </form>
+  </section>
+
+  <details class="card">
+    <summary>Настройки целей</summary>
+    <div class="form">
+      <div class="row">
+        <label class="f">Расход в день, ккал<input id="s-tdee" data-setting="tdee" type="number" min="800" max="6000" value="${esc(setting('tdee',2000))}"></label>
+        <label class="f">Цель дефицита, ккал<input id="s-goal" data-setting="deficitGoal" type="number" min="0" max="1500" value="${esc(setting('deficitGoal',500))}"></label>
+      </div>
+      <div class="row">
+        <label class="f">Цель IELTS<input id="s-target" data-setting="ieltsTarget" type="number" step="0.5" min="1" max="9" value="${esc(setting('ieltsTarget',7))}"></label>
+        <label class="f">Дата IELTS<input id="s-date" data-setting="ieltsDate" type="date" value="${esc(setting('ieltsDate',''))}"></label>
+      </div>
+      <p class="hint">Изменения сохраняются сразу. Расход в день можно прикинуть по калькулятору TDEE.</p>
+    </div>
+  </details>
+
+  <details class="card" id="widget-box">
+    <summary>Виджет на iPhone</summary>
+    <div class="form">
+      <p class="hint">Этот код вставляется в виджет Scriptable (параметр виджета). По нему виджет только читает ваши задачи, менять их он не может. Если код попал к кому-то, создайте новый: старый перестанет работать.</p>
+      ${S.widgetToken?`<div class="code" id="w-code">${esc(S.widgetToken)}</div>`:''}
+      <div class="row">
+        ${S.widgetToken?`<button type="button" class="btn primary" data-action="copy-token">Скопировать код</button>`:''}
+        <button type="button" class="btn${S.widgetToken?'':' primary'}" data-action="new-token">${S.widgetToken?'Создать новый код':'Создать код для виджета'}</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <span class="hint">${esc(S.email||'')}</span>
+    <button type="button" class="btn small" data-action="logout">Выйти</button>
+  </div>`;
+}
+
+function viewAuth(){
+  return `<form class="card form auth" data-form="auth">
+    <p class="eyebrow">Личный трекер целей</p>
+    <h1 class="display">${S.authMode==='up'?'Создать аккаунт':'Вход'}</h1>
+    <label class="f">Почта<input id="au-email" type="email" autocomplete="email" required></label>
+    <label class="f">Пароль<input id="au-pass" type="password" autocomplete="${S.authMode==='up'?'new-password':'current-password'}" minlength="6" required></label>
+    ${S.authMsg?`<p class="hint" style="color:var(--ink)">${esc(S.authMsg)}</p>`:''}
+    <div class="row"><button class="btn primary" type="submit">${S.authMode==='up'?'Создать аккаунт':'Войти'}</button></div>
+    <button type="button" class="btn small" data-action="auth-mode" style="justify-self:start">${S.authMode==='up'?'Уже есть аккаунт? Войти':'Впервые здесь? Создать аккаунт'}</button>
+  </form>`;
+}
+
+/* ---------- render ---------- */
+function body(){
+  if(S.status==='nodb') return `<div class="banner bad">Не заполнен файл config.js: укажите адрес проекта Supabase и publishable key.</div>`;
+  if(S.status==='auth') return viewAuth();
+  if(S.status==='error') return `<div class="banner bad">Связь с хранилищем прервалась. Обновите страницу.</div>`;
+  if(!NEED.every(n=>S.got.has(n))) return `<div class="card empty"><span>${S.stale?'Не удаётся связаться с хранилищем. Проверьте интернет: трекер подключится сам.':'Загружаю ваши задачи…'}</span></div>`;
+  const note=S.stale?`<div class="banner">Нет связи с хранилищем, данные могут быть устаревшими.</div>`:'';
+  return note+({today:viewToday,tasks:viewTasks,areas:viewAreas,goals:viewGoals}[S.tab])();
+}
+function render(){
+  const view=$('#view'), keep={}, act=document.activeElement;
+  view.querySelectorAll('input[id],select[id]').forEach(el=>keep[el.id]=el.value);
+  const detOpen=[...view.querySelectorAll('details')].map(d=>d.open);
+  const focusId=act&&view.contains(act)&&act.id?act.id:null;
+  view.innerHTML=body();
+  for(const [id,v] of Object.entries(keep)){const el=document.getElementById(id); if(el&&view.contains(el)) el.value=v}
+  view.querySelectorAll('details').forEach((d,i)=>{if(detOpen[i]) d.open=true});
+  if(focusId) document.getElementById(focusId)?.focus();
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
+  $('#fab').hidden=S.status!=='ready'||!S.got.has('tasks');
+  document.querySelector('.nav').hidden=S.status==='auth'||S.status==='nodb';
+}
+let renderQueued=false;
+function scheduleRender(){if(renderQueued) return; renderQueued=true; queueMicrotask(()=>{renderQueued=false; render()})}
+
+/* ---------- events ---------- */
+function openSheet(){$('#t-area').innerHTML=areaOptions(S.filter!=='all'&&S.filter!=='none'?S.filter:'');
+  $('#t-due').value=today(); $('#scrim').hidden=false; $('#sheet').hidden=false; setTimeout(()=>$('#t-title').focus(),30)}
+function closeSheet(){$('#scrim').hidden=true;$('#sheet').hidden=true}
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-action]'); if(!el) return;
+  const {action,id}=el.dataset;
+  switch(action){
+    case 'tab': S.tab=el.dataset.tab; render(); window.scrollTo(0,0); break;
+    case 'open-sheet': openSheet(); break;
+    case 'close-sheet': closeSheet(); break;
+    case 'filter': S.filter=id; render(); break;
+    case 'open-area': S.filter=id; S.tab='tasks'; render(); window.scrollTo(0,0); break;
+    case 'color': S.color=id; render(); break;
+    case 'toggle': {
+      const t=S.tasks.find(x=>x.id===id); if(!t) break;
+      if(isDaily(t)) updDay(today(),d=>{d.habits={...(d.habits||{})}; if(d.habits[id]) delete d.habits[id]; else d.habits[id]=true});
+      else queue('tasks/'+id,()=>{const c=S.tasks.find(x=>x.id===id); if(!c) return; return db.doc('tasks/'+id).update({done:!c.done,doneAt:!c.done?today():null})});
+      break}
+    case 'del': {
+      const kind=el.dataset.kind;
+      if(arm(kind+':'+id)) queue(kind+'/'+id,()=>db.doc(kind+'/'+id).delete());
+      render(); break}
+    case 'rm-entry': {const list=el.dataset.list,i=+el.dataset.i;
+      updDay(today(),d=>{d[list]=(d[list]||[]).filter((_,j)=>j!==i)}); break}
+    case 'auth-mode': S.authMode=S.authMode==='up'?'in':'up'; S.authMsg=''; render(); break;
+    case 'logout': sb.auth.signOut(); break;
+    case 'copy-token': {
+      const ok=()=>toast('Код скопирован');
+      navigator.clipboard?.writeText(S.widgetToken).then(ok,()=>selectCode())??selectCode(); break}
+    case 'new-token': {
+      const bytes=crypto.getRandomValues(new Uint8Array(24)), token=[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+      sb.from('widget_tokens').upsert({user_id:S.uid,token}).then(({error})=>{
+        if(error) return toast('Не получилось создать код. Проверьте, что schema.sql выполнен.');
+        S.widgetToken=token; render(); toast('Новый код создан')}); break}
+    case 'topic': {const dlt=+el.dataset.d;
+      queue('exams/'+id,()=>{const x=S.exams.find(e=>e.id===id); if(!x) return;
+        const n=Math.max(0,Math.min(+x.topicsTotal||0,(+x.topicsDone||0)+dlt)); if(n===(+x.topicsDone||0)) return;
+        return db.doc('exams/'+id).update({topicsDone:n})}); break}
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('#sheet').hidden) closeSheet();
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.area[data-action]')){e.preventDefault();e.target.click()}
+});
+document.addEventListener('change',e=>{
+  const k=e.target.dataset?.setting; if(!k) return;
+  let v=e.target.value; if(e.target.type==='number'){if(v==='')return; v=+v}
+  queue('settings/main',()=>db.doc('settings/main').set({...S.settings,[k]:v}));
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('form[data-form]'); if(!f) return; e.preventDefault();
+  const v=id=>(document.getElementById(id)?.value||'').trim();
+  if(f.dataset.form==='auth') return authSubmit(v('au-email'),document.getElementById('au-pass').value);
+  if(!db){toast('Хранилище недоступно.');return}
+  switch(f.dataset.form){
+    case 'task': {
+      const title=v('t-title'); if(!title) return;
+      const prio=+(f.querySelector('input[name="t-prio"]:checked')?.value||2), repeat=v('t-repeat');
+      const doc={title,areaId:v('t-area'),due:repeat==='daily'?'':v('t-due'),repeat,priority:prio,done:false,doneAt:null,createdAt:Date.now()};
+      f.reset(); closeSheet();
+      queue('tasks/new',()=>db.collection('tasks').add(doc)).then(()=>{});
+      toast('Задача добавлена'); break}
+    case 'area': {
+      const name=v('a-name'); if(!name) return; f.reset();
+      queue('areas/new',()=>db.collection('areas').add({name,color:S.color,order:Date.now()})); break}
+    case 'exam': {
+      const title=v('x-title'),date=v('x-date'); if(!title||!date) return;
+      const doc={title,date,topicsTotal:Math.max(0,parseInt(v('x-total'))||0),topicsDone:0,areaId:v('x-area')};
+      f.reset(); queue('exams/new',()=>db.collection('exams').add(doc)); break}
+    case 'kcal': {
+      const kcal=parseInt(v('k-kcal')); if(!(kcal>0)) return;
+      const list=e.submitter?.value==='burn'?'burn':'food', label=v('k-label');
+      f.reset(); updDay(today(),d=>{d[list]=[...(d[list]||[]),{kcal,label}]}); break}
+    case 'weight': {
+      const w=parseFloat(v('w-weight').replace(',','.')); if(!(w>0)) return;
+      f.reset(); updDay(today(),d=>{d.weight=Math.round(w*10)/10}); toast('Вес записан'); break}
+    case 'mock': {
+      const m={date:v('m-date')}; for(const k of ['L','R','W','S']){const n=parseFloat(v('m-'+k).replace(',','.')); if(!(n>=0&&n<=9)) return; m[k]=Math.round(n*2)/2}
+      f.reset(); document.getElementById('m-date').value=today();
+      queue('ielts/new',()=>db.collection('ielts').add(m)); break}
+  }
+});
+
+function selectCode(){const el=document.getElementById('w-code'); if(!el) return;
+  const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast('Код выделен: скопируйте его')}
+
+/* ---------- data: Supabase-backed store with the same doc/collection API the views use ---------- */
+function makeStore(sb,uid){
+  const cache=new Map(), listeners=new Set(); let loaded=false;
+  const key=(c,id)=>c+'/'+id;
+  const notify=()=>listeners.forEach(l=>l());
+  async function loadAll(){
+    const rows=[]; for(let from=0;;from+=1000){
+      const {data,error}=await sb.from('docs').select('collection,id,data').range(from,from+999); if(error) throw error;
+      rows.push(...data); if(data.length<1000) break}
+    cache.clear(); rows.forEach(r=>cache.set(key(r.collection,r.id),r.data)); loaded=true; notify();
+  }
+  sb.channel('docs-'+uid).on('postgres_changes',{event:'*',schema:'public',table:'docs'},p=>{
+    const row=p.eventType==='DELETE'?p.old:p.new; if(!row||row.user_id!==uid) return;
+    if(p.eventType==='DELETE') cache.delete(key(row.collection,row.id)); else cache.set(key(row.collection,row.id),row.data);
+    notify();
+  }).subscribe();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') loadAll().catch(()=>{})});
+  const meta={fromCache:false,hasPendingWrites:false};
+  const fail=async e=>{await loadAll().catch(()=>{}); throw e};
+  function docRef(c,id){
+    const ref={id,path:c+'/'+id,
+      async get(){const d=cache.get(key(c,id));return {id,exists:d!==undefined,data:()=>d,metadata:meta}},
+      async set(data){cache.set(key(c,id),data); notify();
+        const {error}=await sb.from('docs').upsert({user_id:uid,collection:c,id,data,updated_at:new Date().toISOString()}); if(error) return fail(error)},
+      async update(patch){const cur=cache.get(key(c,id)); if(!cur) throw {code:'invalid_argument'}; return ref.set({...cur,...patch})},
+      async delete(){cache.delete(key(c,id)); notify();
+        const {error}=await sb.from('docs').delete().match({user_id:uid,collection:c,id}); if(error) return fail(error)},
+      onSnapshot(next){const l=()=>{if(loaded){const d=cache.get(key(c,id)); next({id,exists:d!==undefined,data:()=>d,metadata:meta})}};
+        listeners.add(l); l(); return ()=>listeners.delete(l)},
+    };
+    return ref;
+  }
+  function query(c,o={}){
+    const q={
+      orderBy:(f,dir='asc')=>query(c,{...o,order:[f,dir]}),
+      limit:n=>query(c,{...o,limit:n}),
+      doc:id=>docRef(c,id||crypto.randomUUID().replace(/-/g,'').slice(0,20)),
+      async add(data){const r=q.doc(); await r.set(data); return r},
+      onSnapshot(next){const l=()=>{if(!loaded) return;
+          let docs=[]; for(const [k,d] of cache){if(k.startsWith(c+'/')) docs.push({id:k.slice(c.length+1),exists:true,data:()=>d,metadata:meta})}
+          if(o.order){const [f,dir]=o.order,s=dir==='desc'?-1:1; docs.sort((a,b)=>String(a.data()[f]??'').localeCompare(String(b.data()[f]??''))*s)}
+          if(o.limit) docs=docs.slice(0,o.limit);
+          next({docs,size:docs.length,empty:!docs.length,metadata:meta})};
+        listeners.add(l); l(); return ()=>listeners.delete(l)},
+    };
+    return q;
+  }
+  return {loadAll,
+    doc:p=>{const i=p.lastIndexOf('/');return docRef(p.slice(0,i),p.slice(i+1))},
+    collection:c=>query(c),
+    isEmpty:()=>cache.size===0,
+    async seed(items){items.forEach(([c,id,data])=>cache.set(key(c,id),data)); notify();
+      const {error}=await sb.from('docs').upsert(items.map(([c,id,data])=>({user_id:uid,collection:c,id,data}))); if(error) return fail(error)}};
+}
+
+const STARTER=()=>[
+  ['areas','uni',{name:'Универ',color:'c1',order:1}],['areas','work',{name:'Работа',color:'c6',order:2}],
+  ['areas','sport',{name:'Спорт',color:'c3',order:3}],['areas','ielts',{name:'IELTS',color:'c2',order:4}],
+  ['areas','food',{name:'Питание',color:'c4',order:5}],['areas','exams',{name:'Экзамены',color:'c5',order:6}],
+  ['settings','main',{tdee:2000,deficitGoal:500,ieltsTarget:7,ieltsDate:''}],
+  ...[['starter-ielts','IELTS: 20 новых слов','ielts'],['starter-sport','Тренировка или 8 000 шагов','sport'],['starter-food','Записать калории за день','food']]
+    .map(([id,title,areaId],i)=>['tasks',id,{title,areaId,due:'',repeat:'daily',priority:2,done:false,doneAt:null,createdAt:Date.now()+i}]),
+];
+
+const CFG=window.TRACKER_CONFIG||{};
+let sb=null, unsubs=[];
+async function authSubmit(email,pass){
+  S.authMsg='Подождите…'; render();
+  const {data,error}=S.authMode==='up'?await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin+location.pathname}})
+    :await sb.auth.signInWithPassword({email,password:pass});
+  if(error){S.authMsg=/Invalid login/i.test(error.message)?'Неверная почта или пароль.':/not confirmed/i.test(error.message)?'Сначала подтвердите почту: письмо уже отправлено.':error.message; render(); return}
+  if(S.authMode==='up'&&!data.session){S.authMsg='Готово! Откройте письмо от Supabase, подтвердите почту и затем войдите.'; S.authMode='in'; render()}
+}
+async function startSession(session){
+  unsubs.forEach(u=>u()); unsubs=[];
+  if(!session){db=null; S.status='auth'; S.got=new Set(); S.fresh=new Set(); render(); return}
+  if(S.uid===session.user.id&&db) return;
+  S.uid=session.user.id; S.email=session.user.email; S.status='loading'; S.authMsg=''; render();
+  const store=makeStore(sb,S.uid);
+  try{await store.loadAll(); if(store.isEmpty()) await store.seed(STARTER())}
+  catch(e){S.status='error'; render(); return}
+  db=store; S.status='ready';
+  sb.from('widget_tokens').select('token').maybeSingle().then(({data})=>{S.widgetToken=data?.token||''; scheduleRender()});
+  const sub=(key,ref,fn)=>unsubs.push(ref.onSnapshot(snap=>{fn(snap); S.got.add(key); S.fresh.add(key); scheduleRender()}));
+  const rows=s=>s.docs.map(d=>({id:d.id,...d.data()}));
+  sub('areas',db.collection('areas'),s=>{S.areas=rows(s).sort((a,b)=>(a.order||0)-(b.order||0))});
+  sub('tasks',db.collection('tasks'),s=>{S.tasks=rows(s)});
+  sub('exams',db.collection('exams'),s=>{S.exams=rows(s)});
+  sub('ielts',db.collection('ielts'),s=>{S.ielts=rows(s)});
+  sub('days',db.collection('days').orderBy('date','desc').limit(120),s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());S.days=o});
+  sub('settings',db.doc('settings/main'),s=>{S.settings=s.exists?s.data():{}});
+}
+(function boot(){
+  if(!CFG.supabaseUrl||!CFG.supabaseKey||!window.supabase){S.status='nodb'; render(); return}
+  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);
+  render();
+  sb.auth.onAuthStateChange((_ev,session)=>{setTimeout(()=>{
+    if(!session){sb.removeAllChannels(); S.uid=null}
+    startSession(session)},0)});
+})();
+// keep "today" correct if the page stays open past midnight
+let lastDay=today(); setInterval(()=>{if(today()!==lastDay){lastDay=today();render()}},60000);
+</script>
+</body>
+</html>
