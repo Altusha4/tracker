@@ -26,13 +26,16 @@
   --f-display:"Unbounded","Onest",system-ui,sans-serif;
   --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-  --r:14px;
+  --r:20px;
+  --shadow:0 1px 2px rgba(21,25,51,.04),0 8px 28px rgba(21,25,51,.06);
+  --card-border:transparent; --glass:rgba(255,255,255,.8); --glass-border:rgba(21,25,51,.07);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#0E1120; --surface:#171B2D; --surface-2:#21263B; --ink:#E9EBF5; --muted:#979DBA; --line:#2B3150;
   --accent:#8291FF; --accent-soft:#252C55; --on-accent:#0E1120;
   --good:#4CC28A; --warn:#E3A64B; --bad:#F07575;
   --c1:#6F8FFF; --c2:#B184F5; --c3:#4CC890; --c4:#F59A52; --c5:#F27DB5; --c6:#45C2CF; --c7:#E2C64A; --c8:#F27474;
+  --shadow:none; --card-border:#262C47; --glass:rgba(23,27,45,.82); --glass-border:#2B3150;
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
@@ -40,6 +43,7 @@
   --accent:#8291FF; --accent-soft:#252C55; --on-accent:#0E1120;
   --good:#4CC28A; --warn:#E3A64B; --bad:#F07575;
   --c1:#6F8FFF; --c2:#B184F5; --c3:#4CC890; --c4:#F59A52; --c5:#F27DB5; --c6:#45C2CF; --c7:#E2C64A; --c8:#F27474;
+  --shadow:none; --card-border:#262C47; --glass:rgba(23,27,45,.82); --glass-border:#2B3150;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -282,6 +286,75 @@ details[open] summary{margin-bottom:12px}
 .sum span{font-size:12.5px;padding:4px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
 .sum b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
 
+/* refresh: soft elevated surfaces, round checks, floating tab bar */
+.card,.tile{border-color:var(--card-border);box-shadow:var(--shadow);border-radius:var(--r)}
+h2{font-family:var(--f-body);font-weight:600;font-size:17px;letter-spacing:-.01em}
+.btn,input,select{border-radius:12px}
+.check{border-radius:50%;border-color:color-mix(in srgb,var(--c,var(--accent)) 50%,var(--line))}
+.check:hover{border-color:var(--c,var(--accent));background:color-mix(in srgb,var(--c,var(--accent)) 10%,transparent)}
+.is-done .check{background:var(--c,var(--accent));border-color:var(--c,var(--accent))}
+.wrap{padding-block:20px 160px}
+.nav{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  border:1px solid var(--glass-border);border-radius:24px;background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);
+  box-shadow:0 12px 32px rgba(21,25,51,.14);padding:6px}
+.nav-inner{max-width:none}
+.tab{border-radius:16px;padding:7px 0}
+.tab[aria-current="page"]{background:var(--accent-soft)}
+.fab{bottom:calc(96px + env(safe-area-inset-bottom,0px));border-radius:20px}
+.toast{bottom:calc(168px + env(safe-area-inset-bottom,0px));border-radius:14px;box-shadow:0 10px 30px rgba(21,25,51,.25)}
+.sheet{box-shadow:0 -12px 40px rgba(21,25,51,.18);border-color:var(--card-border)}
+
+/* today: hero card + bento */
+.hero-card{position:relative;overflow:hidden;background:var(--accent);color:var(--on-accent);border-radius:26px;padding:22px 22px 22px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 14px 36px color-mix(in srgb,var(--accent) 30%,transparent)}
+.hero-card::before{content:"";position:absolute;width:280px;height:280px;right:-90px;top:-120px;border-radius:50%;background:color-mix(in srgb,var(--on-accent) 9%,transparent);pointer-events:none}
+.hero-card::after{content:"";position:absolute;width:160px;height:160px;left:38%;bottom:-110px;border-radius:50%;background:color-mix(in srgb,var(--on-accent) 7%,transparent);pointer-events:none}
+.hero-card>*{position:relative}
+.hero-card h1.display{font-size:26px}
+.hero-eyebrow{margin:0;font-size:13px;font-weight:500;opacity:.8}
+.hero-sub{margin:0;opacity:.92}
+.hero-card .ring-bg{stroke:color-mix(in srgb,var(--on-accent) 22%,transparent)}
+.hero-card .ring-fg{stroke:var(--on-accent)}
+.bento{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bento .wide{grid-column:1/-1}
+.tile{padding:14px 16px;gap:6px;align-content:start}
+.tile-top{display:flex;align-items:center;gap:8px}
+.tile-val{font-size:22px}
+.tile-val small{font-family:var(--f-body);font-size:13px;font-weight:500;color:var(--muted)}
+.ico{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--c,var(--accent));background:color-mix(in srgb,var(--c,var(--accent)) 14%,var(--surface))}
+.ico svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tile-focus{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:var(--bg)}
+.tile-focus .tf-text{display:grid;gap:6px;min-width:0}
+.tile-focus .eyebrow,.tile-focus .tile-sub{color:inherit;opacity:.7}
+.tile-focus .ico{background:color-mix(in srgb,var(--bg) 16%,transparent);color:var(--bg)}
+.tile-focus .tile-val{font-size:30px}
+.play{width:52px;height:52px;border-radius:50%;background:var(--bg);color:var(--ink);display:grid;place-items:center;flex:none;transition:transform .15s}
+.tile-focus:hover .play{transform:scale(1.06)}
+.play svg{width:20px;height:20px;fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.tile-water{cursor:default}
+.cups{display:flex;gap:4px;flex-wrap:wrap}
+.cups i{width:11px;height:16px;border-radius:3px 3px 6px 6px;background:var(--surface-2)}
+.cups i.on{background:var(--c)}
+.tile .stepper button{width:32px;height:32px}
+.tile .prog{height:6px;margin-top:2px}
+
+/* focus timer */
+.focus-dial{position:relative;width:min(240px,70vw);aspect-ratio:1;margin:4px auto 0;max-width:100%}
+.focus-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.focus-dial circle{fill:none;stroke-width:10}
+.fd-bg{stroke:var(--surface-2)}
+.fd-fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.focus.is-break .fd-fg{stroke:var(--good)}
+.focus-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:4px}
+.focus-time{font-family:var(--f-display);font-weight:700;font-size:46px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.focus-state{font-size:13px;color:var(--muted)}
+.focus-mini{position:fixed;z-index:22;left:max(16px,calc(env(safe-area-inset-left,0px) + 16px));bottom:calc(104px + env(safe-area-inset-bottom,0px));
+  border:0;border-radius:99px;padding:10px 16px;background:var(--ink);color:var(--bg);font-family:var(--f-mono);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;box-shadow:0 10px 26px rgba(21,25,51,.25)}
+.focus-mini i{width:8px;height:8px;border-radius:50%;background:var(--bad);animation:blink 1.2s ease-in-out infinite}
+.focus-mini.paused i{animation:none;background:var(--warn)}
+@keyframes blink{50%{opacity:.25}}
+
 /* columns: stacked on phone, side by side on laptop */
 .layout{display:grid;gap:18px;align-items:start}
 .col{display:grid;gap:18px;min-width:0}
@@ -327,7 +400,11 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
 
   .nav{top:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);
     padding:28px 16px max(20px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex}
+  .nav{left:0;bottom:0;border:0;border-right:1px solid var(--line);border-radius:0;background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
   .nav-inner{display:flex;flex-direction:column;gap:4px;width:100%;max-width:none;margin:0}
+  .focus-mini{left:auto;right:28px;bottom:28px}
+  .hero-card{padding:28px 32px}
+  .hero-card h1.display{font-size:32px}
   .nav-brand{display:flex;align-items:center;gap:10px;padding:0 10px 22px;font-family:var(--f-display);font-weight:700;font-size:15px;line-height:1.15}
   .nav-brand img{width:34px;height:34px;border-radius:10px}
   .nav-new{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:14px;width:100%}
@@ -399,11 +476,27 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
   </div>
   <div class="sheet-actions">
     <button type="button" class="btn danger" id="sheet-del" data-action="sheet-del" hidden>Удалить</button>
+    <button type="button" class="btn" id="sheet-focus" data-action="sheet-focus" hidden>Фокус</button>
     <span style="flex:1"></span>
     <button type="button" class="btn" data-action="close-sheet">Отмена</button>
     <button type="submit" class="btn primary" id="sheet-submit">Добавить</button>
   </div>
 </form>
+<div class="scrim" id="focus-scrim" data-action="focus-close" hidden></div>
+<section class="sheet focus" id="focus" hidden aria-label="Фокус-таймер">
+  <div class="sheet-head"><h2>Фокус-таймер</h2><button type="button" class="del" data-action="focus-close" aria-label="Закрыть">×</button></div>
+  <div class="seg" role="radiogroup" aria-label="Режим">
+    <label><input type="radio" name="fmode" id="fm-25" value="25"><span>25 мин</span></label>
+    <label><input type="radio" name="fmode" id="fm-50" value="50"><span>50 мин</span></label>
+    <label><input type="radio" name="fmode" id="fm-5" value="5"><span>Перерыв 5</span></label>
+  </div>
+  <div class="focus-dial"><svg viewBox="0 0 220 220" aria-hidden="true"><circle class="fd-bg" cx="110" cy="110" r="96"/><circle class="fd-fg" id="fd-fg" cx="110" cy="110" r="96" stroke-dasharray="603.2" stroke-dashoffset="0"/></svg>
+    <div class="focus-center"><div class="focus-time" id="focus-time">25:00</div><div class="focus-state" id="focus-state">Готово к старту</div></div></div>
+  <label class="f">Над чем работаете<select id="focus-task"></select></label>
+  <div class="sheet-actions"><button type="button" class="btn" data-action="focus-reset">Сбросить</button><span style="flex:1"></span><button type="button" class="btn primary" id="focus-go" data-action="focus-toggle" style="min-width:130px">Старт</button></div>
+  <p class="hint" id="focus-today"></p>
+</section>
+<button class="focus-mini" id="focus-mini" data-action="focus-open" hidden><i></i><span id="focus-mini-t"></span></button>
 <div class="toast" id="toast" role="status" hidden><span id="toast-msg"></span><button type="button" id="toast-act" hidden></button></div>
 
 <script>
@@ -504,7 +597,7 @@ function taskRow({t,checked,overdue},opt={}){
     opt.week&&isDaily(t)?habitWeek(t.id,a):'',
     !isDaily(t)&&t.due&&!(checked&&t.doneAt)?`<span class="${overdue?'late':''}">${relDue(t.due)}</span>`:'',
     overdue?`<button type="button" class="mini" data-action="postpone" data-id="${esc(t.id)}">перенести на сегодня</button>`:''].join('');
-  return `<li class="task${checked?' is-done':''}${S.pop===t.id?' pop':''}">
+  return `<li class="task${checked?' is-done':''}${S.pop===t.id?' pop':''}" style="--c:var(--${esc(a?.color||'c1')})">
     <button class="check" data-action="toggle" data-id="${esc(t.id)}" aria-pressed="${checked}" aria-label="${checked?'Снять отметку':'Отметить'}: ${esc(t.title)}"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></button>
     <div class="task-body" data-action="edit" data-id="${esc(t.id)}" role="button" tabindex="0" title="Изменить"><span class="task-title">${t.priority==1?'<b class="prio" title="Срочно">!</b>':''}${esc(t.title)}</span>${meta?`<span class="task-meta">${meta}</span>`:''}</div>
     <button class="del" data-action="del" data-kind="tasks" data-id="${esc(t.id)}" aria-label="Удалить задачу">×</button></li>`}
@@ -515,20 +608,36 @@ function quickAdd(due){
   </form>`}
 
 /* ---------- views ---------- */
+const ICON={
+  timer:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 2.3M9.5 3h5"/>',
+  flame:'<path d="M12 21c-3.6 0-6.5-2.6-6.5-6.4 0-3.6 2.6-5.3 3.6-8.6 1 1.7 1.7 2.6 2.9 3.2.4-2.7 1.7-4.9 3.6-6.2-.2 3 3 5.4 3 10.2 0 4.2-2.9 7.8-6.6 7.8z"/>',
+  drop:'<path d="M12 3.5s-6.5 7-6.5 11.2a6.5 6.5 0 0 0 13 0C18.5 10.5 12 3.5 12 3.5z"/>',
+  book:'<path d="M5 4.5h10.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10.5"/>',
+  cap:'<path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4.4c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.4M21.5 9.5v5"/>',
+  play:'<path d="M8.5 5.5v13l10.5-6.5z"/>',
+  pause:'<path d="M8 5.5v13M16 5.5v13" stroke-width="3.2" stroke-linecap="round"/>'};
+const ico=(name,c)=>`<span class="ico"${c?` style="--c:var(--${c})"`:''}><svg viewBox="0 0 24 24">${ICON[name]}</svg></span>`;
+function greet(){const h=new Date().getHours();return h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер'}
+const focusOn=d=>(S.days[d]?.focus||[]).reduce((s,e)=>s+(+e.min||0),0);
+function focusArea(id){const td=today();let m=0;for(let i=0;i<7;i++)for(const e of (S.days[addDays(td,-i)]?.focus||[]))if((e.areaId||'')===id)m+=+e.min||0;return m}
+const fmtMin=m=>m>=60?(`${Math.floor(m/60)} ч`+(m%60?` ${m%60} мин`:'')):`${m} мин`;
+
 function viewToday(){
-  const td=today(),d=parse(td),items=todayItems(),done=items.filter(i=>i.checked).length,total=items.length,p=total?done/total:0;
-  const def=deficitOn(td), goal=+setting('deficitGoal',500);
+  const td=today(),d=parse(td),items=todayItems(),done=items.filter(i=>i.checked).length,total=items.length,p=total?done/total:0,left=total-done;
+  const def=deficitOn(td), goal=+setting('deficitGoal',500), tt=dayTotals(td), budget=(+setting('tdee',2000))+tt.out-goal;
   const ieltsDate=setting('ieltsDate',''), lastMock=[...S.ielts].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
   const exam=S.exams.filter(e=>e.date>=td).sort((a,b)=>a.date.localeCompare(b.date))[0];
   const soon=S.tasks.filter(t=>!isDaily(t)&&!t.done&&t.due&&t.due>td&&t.due<=addDays(td,7)).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
   const days7=[...Array(7)].map((_,i)=>addDays(td,i-6)), counts=days7.map(doneOn), max=Math.max(1,...counts);
+  const weekFocus=days7.reduce((s,x)=>s+focusOn(x),0), water=+(S.days[td]?.water||0), wGoal=Math.min(16,Math.max(1,+setting('waterGoal',8)));
   let streak=0,cur=doneOn(td)?td:addDays(td,-1); while(doneOn(cur)>0&&streak<400){streak++;cur=addDays(cur,-1)}
+  const ieltsDays=ieltsDate&&ieltsDate>=td?between(td,ieltsDate):null;
   return `
-  <section class="hero">
+  <section class="hero-card">
     <div class="hero-text">
-      <p class="eyebrow">${WD_FULL[d.getDay()]}</p>
-      <h1 class="display">${fmtDate(td)}</h1>
-      <p class="muted" style="margin:0">${total?`Сделано <b class="num">${done}</b> из <b class="num">${total}</b>`:'На сегодня задач нет'}${streak?` · серия <b class="num">${streak}</b> ${plural(streak,DAY)}`:''}</p>
+      <p class="hero-eyebrow">${WD_FULL[d.getDay()]}, ${fmtDate(td)}</p>
+      <h1 class="display">${greet()}</h1>
+      <p class="hero-sub">${!total?'На сегодня задач нет':left?`Осталось ${left} ${plural(left,TASK)} из ${total}`:'Все задачи на сегодня сделаны'}${streak?` · серия ${streak} ${plural(streak,DAY)}`:''}</p>
     </div>
     <div class="ring-wrap">${ring(p)}<span class="ring-label">${Math.round(p*100)}%</span></div>
   </section>
@@ -540,30 +649,44 @@ function viewToday(){
     ${total?`<ul class="tasks">${items.map(i=>taskRow(i)).join('')}</ul>`
       :`<div class="empty"><span>На сегодня пусто. Напишите задачу в строке выше или добавьте ежедневную привычку.</span></div>`}
   </section>
-
   ${soon.length?`<section class="card"><h2>На этой неделе</h2><ul class="tasks">${soon.map(t=>taskRow({t,checked:false})).join('')}</ul></section>`:''}
   </div><div class="col">
 
-  <section class="tiles">
+  <section class="bento">
+    <button class="tile tile-focus wide" data-action="focus-open">
+      <span class="tf-text">
+        <span class="tile-top">${ico('timer')}<span class="eyebrow">Фокус-таймер</span></span>
+        <span class="tile-val num" data-focus-live>${mmss(fLeft())}</span>
+        <span class="tile-sub">сегодня ${fmtMin(focusOn(td))} · за неделю ${fmtMin(weekFocus)}</span>
+      </span>
+      <span class="play" data-focus-play aria-hidden="true"><svg viewBox="0 0 24 24">${F.running?ICON.pause:ICON.play}</svg></span>
+    </button>
+    <button class="tile" data-action="tab" data-tab="goals" style="--c:var(--c4)">
+      <span class="tile-top">${ico('flame','c4')}<span class="eyebrow">Дефицит</span></span>
+      <span class="tile-val num">${def===null?'—':fmtK(def)}<small> ккал</small></span>
+      <span class="prog${tt.inK>budget?' over':''}"><span style="width:${Math.min(100,budget>0?tt.inK/budget*100:0)}%"></span></span>
+      <span class="tile-sub">${def===null?'еда не записана':def>=goal?'цель выполнена':`цель ${fmtK(goal)}`}</span>
+    </button>
+    <div class="tile tile-water" style="--c:var(--c6)">
+      <span class="tile-top">${ico('drop','c6')}<span class="eyebrow">Вода</span></span>
+      <span class="tile-val num">${water}<small> / ${wGoal}</small></span>
+      <span class="cups" aria-hidden="true">${[...Array(wGoal)].map((_,i)=>`<i class="${i<water?'on':''}"></i>`).join('')}</span>
+      <span class="stepper"><button type="button" data-action="water" data-d="-1" aria-label="Убрать стакан">−</button><button type="button" data-action="water" data-d="1" aria-label="Добавить стакан">+</button></span>
+    </div>
     <button class="tile" data-action="tab" data-tab="goals">
-      <span class="eyebrow">Дефицит</span>
-      <span class="tile-val num">${def===null?'—':fmtK(def)+' ккал'}</span>
-      <span class="tile-sub">${def===null?'Еда сегодня не записана':def>=goal?'Цель на день выполнена':`Цель ${fmtK(goal)} ккал`}</span>
+      <span class="tile-top">${ico('book','c2')}<span class="eyebrow">IELTS</span></span>
+      <span class="tile-val">${ieltsDays!==null?`${ieltsDays}<small> ${plural(ieltsDays,DAY)}</small>`:lastMock?band(lastMock).toFixed(1):'—'}</span>
+      <span class="tile-sub">${ieltsDays!==null?`до экзамена`:'дата не указана'}${lastMock?` · пробник ${band(lastMock).toFixed(1)}/${(+setting('ieltsTarget',7)).toFixed(1)}`:''}</span>
     </button>
     <button class="tile" data-action="tab" data-tab="goals">
-      <span class="eyebrow">IELTS</span>
-      <span class="tile-val">${ieltsDate&&ieltsDate>=td?`${between(td,ieltsDate)} ${plural(between(td,ieltsDate),DAY)}`:lastMock?band(lastMock).toFixed(1):'—'}</span>
-      <span class="tile-sub">${ieltsDate&&ieltsDate>=td?`до экзамена · ${fmtDate(ieltsDate)}`:'Укажите дату экзамена в «Целях»'}${lastMock?` · пробник ${band(lastMock).toFixed(1)} / ${(+setting('ieltsTarget',7)).toFixed(1)}`:''}</span>
-    </button>
-    <button class="tile" data-action="tab" data-tab="goals">
-      <span class="eyebrow">Ближайший экзамен</span>
-      <span class="tile-val">${exam?`${between(td,exam.date)} ${plural(between(td,exam.date),DAY)}`:'—'}</span>
-      <span class="tile-sub">${exam?`${esc(exam.title)} · темы ${+exam.topicsDone||0}/${+exam.topicsTotal||0}`:'Экзамены не добавлены'}</span>
+      <span class="tile-top">${ico('cap','c5')}<span class="eyebrow">Экзамен</span></span>
+      <span class="tile-val">${exam?`${between(td,exam.date)}<small> ${plural(between(td,exam.date),DAY)}</small>`:'—'}</span>
+      <span class="tile-sub">${exam?`${esc(exam.title)} · ${+exam.topicsDone||0}/${+exam.topicsTotal||0} тем`:'не добавлены'}</span>
     </button>
   </section>
 
   <section class="card">
-    <div class="card-head"><h2>Неделя</h2><span class="hint">выполнено задач по дням</span></div>
+    <div class="card-head"><h2>Неделя</h2><span class="hint">задачи по дням${weekFocus?` · фокус ${fmtMin(weekFocus)}`:''}</span></div>
     <div class="week">${days7.map((dd,i)=>`<div class="bar-col"><span class="num">${counts[i]||''}</span><div class="bar-track"><div class="bar${dd===td?' today':''}" style="height:${Math.max(4,counts[i]/max*70)}px"></div></div><span>${WD[parse(dd).getDay()]}</span></div>`).join('')}</div>
   </section>
   </div></div>`;
@@ -604,7 +727,7 @@ function viewAreas(){
     return `<div class="card area" style="--c:var(--${esc(a.color||'c1')})" data-action="open-area" data-id="${esc(a.id)}" role="button" tabindex="0" aria-label="Открыть задачи: ${esc(a.name)}">
       <div class="area-top"><span class="area-name"><i class="dot" style="width:12px;height:12px"></i>${esc(a.name)}</span><span class="area-pct">${s.pct===null?'—':s.pct+'%'}</span></div>
       <div class="prog"><span style="width:${s.pct||0}%"></span></div>
-      <div class="split"><span>задачи <b class="num">${s.done}/${s.ts.length}</b>${s.topT?` · темы <b class="num">${s.topD}/${s.topT}</b>`:''}</span>${s.daily.length?`<span>сегодня привычки <b class="num">${s.dailyDone}/${s.daily.length}</b></span>`:''}</div>
+      <div class="split"><span>задачи <b class="num">${s.done}/${s.ts.length}</b>${s.topT?` · темы <b class="num">${s.topD}/${s.topT}</b>`:''}${focusArea(a.id)?` · фокус <b class="num">${fmtMin(focusArea(a.id))}</b>`:''}</span>${s.daily.length?`<span>сегодня привычки <b class="num">${s.dailyDone}/${s.daily.length}</b></span>`:''}</div>
       <div class="split"><span>${s.next?`Дальше: ${esc(s.next.title)} · ${relDue(s.next.due)}`:'Открытых задач со сроком нет'}</span>
       <button class="del${armed?' armed':''}" data-action="del" data-kind="areas" data-id="${esc(a.id)}" aria-label="Удалить сферу">${armed?'Удалить?':'×'}</button></div>
     </div>`}).join('');
@@ -704,6 +827,9 @@ function viewGoals(){
   <details class="card">
     <summary>Настройки целей</summary>
     <div class="form">
+      <div class="row">
+        <label class="f">Вода в день, стаканов<input id="s-water" data-setting="waterGoal" type="number" min="1" max="16" value="${esc(setting('waterGoal',8))}"></label>
+      </div>
       <div class="row">
         <label class="f">Расход в день, ккал<input id="s-tdee" data-setting="tdee" type="number" min="800" max="6000" value="${esc(setting('tdee',2000))}"></label>
         <label class="f">Цель дефицита, ккал<input id="s-goal" data-setting="deficitGoal" type="number" min="0" max="1500" value="${esc(setting('deficitGoal',500))}"></label>
@@ -851,6 +977,51 @@ document.addEventListener('drop',e=>{const c=e.target.closest?.('.cal-cell'); if
   toast(`Перенесено на ${fmtDate(d)}`,{label:'Отменить',fn:()=>queue('tasks/'+id,()=>db.doc('tasks/'+id).update({due:from}))})});
 document.addEventListener('dragend',()=>{dragId=null; document.querySelectorAll('.cal-cell.drop').forEach(x=>x.classList.remove('drop'))});
 
+/* ---------- focus timer ---------- */
+const F={mode:25,left:25*60,endsAt:0,running:false,taskId:''};
+try{Object.assign(F,JSON.parse(localStorage.getItem('focus')||'{}'))}catch(_){}
+const saveF=()=>{try{localStorage.setItem('focus',JSON.stringify(F))}catch(_){}};
+const fLeft=()=>F.running?Math.max(0,Math.round((F.endsAt-Date.now())/1000)):F.left;
+const mmss=x=>`${pad(Math.floor(x/60))}:${pad(x%60)}`;
+let actx=null;
+function unlockAudio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(_){}}
+function beep(){navigator.vibrate?.([200,120,200]); if(!actx) return;
+  [0,.32,.64].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain(),s0=actx.currentTime+t;o.frequency.value=880;o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001,s0);g.gain.exponentialRampToValueAtTime(.18,s0+.02);g.gain.exponentialRampToValueAtTime(.0001,s0+.24);o.start(s0);o.stop(s0+.3)})}
+function focusTaskOptions(){
+  const td=today(), open=S.tasks.filter(t=>isDaily(t)||(!t.done&&(!t.due||t.due<=addDays(td,7))));
+  return `<option value="">Без задачи</option>`+open.map(t=>`<option value="${esc(t.id)}"${t.id===F.taskId?' selected':''}>${esc(t.title)}</option>`).join('');
+}
+function paintFocus(){
+  const left=fLeft(), total=F.mode*60, started=F.running||left<total, brk=F.mode===5;
+  const ov=$('#focus'); ov.classList.toggle('is-break',brk);
+  $('#focus-time').textContent=mmss(left);
+  $('#focus-state').textContent=F.running?(brk?'Перерыв':'Фокус идёт'):started?'Пауза':(brk?'Перерыв готов':'Готово к старту');
+  $('#fd-fg').setAttribute('stroke-dashoffset',(603.2*(1-left/total)).toFixed(1));
+  $('#focus-go').textContent=F.running?'Пауза':started?'Продолжить':'Старт';
+  document.querySelectorAll('input[name="fmode"]').forEach(r=>r.checked=+r.value===F.mode);
+  $('#focus-today').textContent=S.status==='ready'?`Сегодня в фокусе: ${fmtMin(focusOn(today()))}`:'';
+  const mini=$('#focus-mini'); mini.hidden=!started||!ov.hidden; mini.classList.toggle('paused',!F.running);
+  $('#focus-mini-t').textContent=`${mmss(left)} · ${brk?'перерыв':'фокус'}`;
+  document.title=F.running?`${mmss(left)} · ${brk?'Перерыв':'Фокус'}`:'Личный трекер целей';
+  document.querySelectorAll('[data-focus-live]').forEach(e=>e.textContent=mmss(left));
+  document.querySelectorAll('[data-focus-play] svg').forEach(e=>e.innerHTML=F.running?ICON.pause:ICON.play);
+}
+function openFocus(){$('#focus-task').innerHTML=focusTaskOptions(); $('#focus-scrim').hidden=false; $('#focus').hidden=false; paintFocus()}
+function closeFocus(){$('#focus-scrim').hidden=true; $('#focus').hidden=true; paintFocus()}
+function setMode(m){F.mode=m; F.running=false; F.left=m*60; saveF(); paintFocus()}
+function focusToggle(){unlockAudio();
+  if(F.running){F.left=fLeft(); F.running=false}
+  else{F.taskId=$('#focus-task').value; F.endsAt=Date.now()+fLeft()*1000; F.running=true}
+  saveF(); paintFocus()}
+function focusDone(){
+  const m=F.mode, task=S.tasks.find(x=>x.id===F.taskId); beep();
+  if(m!==5){updDay(today(),d=>{d.focus=[...(d.focus||[]),{min:m,taskId:F.taskId||'',areaId:task?.areaId||'',at:Date.now()}]});
+    setMode(5); toast(`Фокус ${m} мин засчитан. Время перерыва.`)}
+  else{setMode(25); toast('Перерыв окончен. Можно продолжать.')}
+}
+setInterval(()=>{if(!F.running) return; if(fLeft()<=0){if(S.status==='ready') focusDone()} else paintFocus()},1000);
+
 /* ---------- render ---------- */
 function body(){
   if(S.status==='nodb') return `<div class="banner bad">Не заполнен файл config.js: укажите адрес проекта Supabase и publishable key.</div>`;
@@ -877,6 +1048,7 @@ function render(){
   document.body.classList.toggle('has-nav',navOn);
   $('#nav-foot').textContent=S.email||'';
   syncThemeButton();
+  paintFocus();
 }
 let renderQueued=false;
 function scheduleRender(){if(renderQueued) return; renderQueued=true; queueMicrotask(()=>{renderQueued=false; render()})}
@@ -898,7 +1070,7 @@ function openSheet(task){
   const p=document.getElementById('t-prio-'+(task?.priority||2)); if(p) p.checked=true;
   $('#sheet-title').textContent=task?'Изменить задачу':'Новая задача';
   $('#sheet-submit').textContent=task?'Сохранить':'Добавить';
-  $('#sheet-del').hidden=!task;
+  $('#sheet-del').hidden=!task; $('#sheet-focus').hidden=!task;
   syncSheet();
   $('#scrim').hidden=false; $('#sheet').hidden=false; setTimeout(()=>$('#t-title').focus(),30)}
 function closeSheet(){$('#scrim').hidden=true;$('#sheet').hidden=true;S.editId=null}
@@ -929,6 +1101,12 @@ document.addEventListener('click',e=>{
     case 'postpone': queue('tasks/'+id,()=>db.doc('tasks/'+id).update({due:today()})); toast('Перенесено на сегодня'); break;
     case 'filter': S.filter=id; render(); break;
     case 'open-area': S.filter=id; S.tab='tasks'; render(); window.scrollTo(0,0); break;
+    case 'focus-open': openFocus(); break;
+    case 'focus-close': closeFocus(); break;
+    case 'focus-toggle': focusToggle(); break;
+    case 'focus-reset': setMode(F.mode); break;
+    case 'sheet-focus': {const id2=S.editId; closeSheet(); F.taskId=id2||''; saveF(); openFocus(); break}
+    case 'water': {const dlt=+el.dataset.d; updDay(today(),d=>{d.water=Math.max(0,(+d.water||0)+dlt)}); break}
     case 'theme-cycle': applyTheme({light:'dark',dark:'auto',auto:'light'}[S.theme]||'light'); render(); break;
     case 'cal-day': {const d=el.dataset.date; S.calSel=d; if(d.slice(0,7)!==calMonth()) S.calMonth=d.slice(0,7); render(); break}
     case 'cal-nav': {const n=+el.dataset.d;
@@ -964,12 +1142,15 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!$('#sheet').hidden) closeSheet();
+  if(e.key==='Escape'&&!$('#focus').hidden) closeFocus();
   if((e.key==='n'||e.key==='т')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&S.status==='ready'&&$('#sheet').hidden&&!e.target.closest('input,select,textarea')){e.preventDefault();openSheet()}
   if((e.key==='Enter'||e.key===' ')&&e.target.matches('.area[data-action],.task-body[data-action],.cal-cell[data-action]')){e.preventDefault();e.target.click()}
 });
 document.addEventListener('change',e=>{
   if(e.target.name==='t-repeat'||e.target.id==='t-due'){syncSheet();return}
   if(e.target.name==='theme'){applyTheme(e.target.value);render();return}
+  if(e.target.name==='fmode'){setMode(+e.target.value);return}
+  if(e.target.id==='focus-task'){F.taskId=e.target.value;saveF();return}
   const k=e.target.dataset?.setting; if(!k) return;
   let v=e.target.value; if(e.target.type==='number'){if(v==='')return; v=+v}
   queue('settings/main',()=>db.doc('settings/main').set({...S.settings,[k]:v}));
